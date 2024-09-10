@@ -68,7 +68,7 @@ const PacketLogViewer: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        fetchLogs(currentPageRef.current);
+        fetchLogs(currentPageRef.current).then();
         const intervalId = setInterval(() => fetchLogs(currentPageRef.current), 5000);
 
         return () => clearInterval(intervalId);
@@ -77,7 +77,7 @@ const PacketLogViewer: React.FC = () => {
     const handlePageChange = (newPage: number) => {
         if (newPage >= 1 && newPage <= pagination.totalPages && newPage !== currentPageRef.current) {
             currentPageRef.current = newPage;
-            fetchLogs(newPage);
+            fetchLogs(newPage).then();
         }
     };
 
