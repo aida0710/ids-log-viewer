@@ -1,43 +1,98 @@
 'use client';
 
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import axios from 'axios';
 import {IDataResponse} from '@/backend/response/IDataResponse';
 import {ResponseStatus} from '@/backend/response/ResponseStatus';
+import {IPaginationInfo} from '@/app/index/interface/IPaginationInfo';
+import {IPacketLog} from '@/app/index/interface/IPacketLog';
+import {Card, CardBody, CardFooter, CardHeader} from '@nextui-org/card';
+import {Button} from '@nextui-org/react';
+import {Divider} from '@nextui-org/divider';
 
-interface Log {
-    id: number;
-    message: string;
-    timestamp: string;
+interface PaginationProps {
+    currentPage: number;
+    totalPages: number;
+    isLoading: boolean;
+    onPageChange: (newPage: number) => void;
 }
 
-const LogViewer: React.FC = () => {
-    const [logs, setLogs] = useState<Log[]>([]);
-    const [error, setError] = useState<string | null>(null);
+const PaginationControls: React.FC<PaginationProps> = ({currentPage, totalPages, isLoading, onPageChange}) => (
+    <div className='my-2 flex items-center justify-between'>
+        <Button
+            onClick={() => onPageChange(currentPage - 1)}
+            disabled={currentPage === 1 || isLoading}
+            color='default'>
+            前へ
+        </Button>
+        <span>
+            Page {currentPage} of {totalPages}
+        </span>
+        <Button
+            onClick={() => onPageChange(currentPage + 1)}
+            disabled={currentPage === totalPages || isLoading}
+            color='default'>
+            次へ
+        </Button>
+    </div>
+);
 
-    const fetchLogs = async () => {
+const PacketLogViewer: React.FC = () => {
+    const [logs, setLogs] = useState<IPacketLog[]>([]);
+    const [pagination, setPagination] = useState<IPaginationInfo>({currentPage: 1, totalPages: 1, totalCount: 0});
+    const [error, setError] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const currentPageRef = useRef(1);
+
+    const fetchLogs = useCallback(async (page: number) => {
+        setIsLoading(true);
         try {
-            const response = await axios.get<IDataResponse>('/api/logs');
+            const response = await axios.get<IDataResponse>(`/api/packet-logs?page=${page}&limit=50`);
             const {data, error, status, message} = response.data;
 
             if (error || status !== ResponseStatus.SUCCESS) {
-                throw new Error(message || 'Failed to fetch logs');
+                throw new Error(message || 'Failed to fetch packet logs');
             }
 
-            setLogs(data);
-            setError(null);
+            if (page === currentPageRef.current) {
+                setLogs(data.logs);
+                setPagination(data.pagination);
+                setError(null);
+            }
         } catch (error) {
-            console.error('Error fetching logs:', error);
-            setError('Failed to fetch logs. Please try again later.');
+            console.error('Error fetching packet logs:', error);
+            setError('Failed to fetch packet logs. Please try again later.');
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchLogs(currentPageRef.current);
+        const intervalId = setInterval(() => fetchLogs(currentPageRef.current), 5000);
+
+        return () => clearInterval(intervalId);
+    }, [fetchLogs]);
+
+    const handlePageChange = (newPage: number) => {
+        if (newPage >= 1 && newPage <= pagination.totalPages && newPage !== currentPageRef.current) {
+            currentPageRef.current = newPage;
+            fetchLogs(newPage);
         }
     };
 
-    useEffect(() => {
-        fetchLogs().then((r) => console.log(r));
-        const intervalId = setInterval(fetchLogs, 5000); // Poll every 5 seconds
-
-        return () => clearInterval(intervalId);
-    }, []);
+    const renderPayload = (payload: IPacketLog['payload']) => {
+        if (payload.type === 'Buffer') {
+            const text = String.fromCharCode(...payload.data);
+            return (
+                <div>
+                    <h3 className='font-semibold'>Payload:</h3>
+                    <pre className='overflow-x-auto whitespace-break-spaces rounded text-sm'>{text}</pre>
+                </div>
+            );
+        }
+        return <p>Payload: {JSON.stringify(payload)}</p>;
+    };
 
     if (error) {
         return <div className='text-red-500'>{error}</div>;
@@ -45,19 +100,55 @@ const LogViewer: React.FC = () => {
 
     return (
         <div className='container mx-auto p-4'>
-            <h1 className='mb-4 text-2xl font-bold'>Log Viewer</h1>
-            <div className='rounded-lg bg-gray-100 p-4'>
+            <h1 className='mb-4 text-2xl font-bold'>Packet Log Viewer</h1>
+            <PaginationControls
+                currentPage={currentPageRef.current}
+                totalPages={pagination.totalPages}
+                isLoading={isLoading}
+                onPageChange={handlePageChange}
+            />
+            <div className='space-y-4'>
                 {logs.map((log) => (
-                    <div
-                        key={log.id}
-                        className='mb-2 rounded bg-white p-2 shadow'>
-                        <span className='font-semibold'>{new Date(log.timestamp).toLocaleString()}</span>
-                        <p>{log.message}</p>
-                    </div>
+                    <Card key={log.id}>
+                        <CardHeader>
+                            <h2 className='mb-2 text-xl font-semibold'>Packet Log ID: {log.id}</h2>
+                        </CardHeader>
+                        <Divider />
+                        <CardBody>
+                            <div className='grid grid-cols-2'>
+                                <p>Arrival Time: {new Date(log.arrival_time).toLocaleString()}</p>
+                                <p>Protocol: {log.protocol}</p>
+                                <p>IP Version: {log.ip_version}</p>
+                                <p>IP Header Length: {log.ip_header_length}</p>
+                                <p>Total Length: {log.total_length}</p>
+                                <p>TTL: {log.ttl}</p>
+                                <p>Fragment Offset: {log.fragment_offset}</p>
+                                <p>Source: {`${log.src_ip} : ${log.src_port}`}</p>
+                                <p>Destination: {`${log.dst_ip} : ${log.dst_port}`}</p>
+                                <p>Application Protocol: {log.application_protocol}</p>
+                                <p>TCP State: {log.tcp_state}</p>
+                                <p>Stream ID: {log.stream_id}</p>
+                                <p>Tcp Seq Num: {log.tcp_seq_num}</p>
+                                <p>Tcp Ack Num: {log.tcp_ack_num}</p>
+                                <p>Tcp Window Size: {log.tcp_window_size}</p>
+                                <p>Tcp Flags: {log.tcp_flags}</p>
+                                <p>Tcp Data Offset: {log.tcp_data_offset}</p>
+                                <p>Is From Client: {log.is_from_client ? 'Yes' : 'No'}</p>
+                            </div>
+                        </CardBody>
+                        <Divider />
+                        <CardFooter>{renderPayload(log.payload)}</CardFooter>
+                    </Card>
                 ))}
             </div>
+            <PaginationControls
+                currentPage={currentPageRef.current}
+                totalPages={pagination.totalPages}
+                isLoading={isLoading}
+                onPageChange={handlePageChange}
+            />
         </div>
     );
 };
 
-export default LogViewer;
+export default PacketLogViewer;
