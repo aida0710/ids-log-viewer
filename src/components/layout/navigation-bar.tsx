@@ -27,7 +27,7 @@ export const NavigationBar = () => {
                     isIconOnly
                     variant='ghost'
                     onClick={(): void => {
-                        window.open('https://github.com/aida0710/profile');
+                        window.open('https://github.com/aida0710/ids-log-viewer', '_blank');
                     }}>
                     <BsGithub className='h-full w-full' />
                 </Button>
