@@ -13,7 +13,7 @@ export default class SqlConnection {
     }
 
     private static validateEnvVariables(): void {
-        const requiredEnvVars: string[] = ['DB_HOST', 'DB_USER', 'DB_PASSWORD', 'DB_DATABASE', 'DB_PORT'];
+        const requiredEnvVars: string[] = ['MYSQL_HOST', 'MYSQL_USER', 'MYSQL_PASSWORD', 'MYSQL_DATABASE', 'MYSQL_PORT'];
         for (const envVar of requiredEnvVars) {
             if (!process.env[envVar]) {
                 throw new Error(`環境変数に${envVar}が設定されていません`);
