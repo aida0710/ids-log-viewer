@@ -1,14 +1,14 @@
 'use client';
 
-import React, {useCallback, useEffect, useRef, useState} from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import axios from 'axios';
-import {IDataResponse} from '@/backend/response/IDataResponse';
-import {ResponseStatus} from '@/backend/response/ResponseStatus';
-import {IPaginationInfo} from '@/app/index/interface/IPaginationInfo';
-import {IPacketLog} from '@/app/index/interface/IPacketLog';
-import {Card, CardBody, CardFooter, CardHeader} from '@nextui-org/card';
-import {Button} from '@nextui-org/react';
-import {Divider} from '@nextui-org/divider';
+import { IDataResponse } from '@/backend/response/IDataResponse';
+import { ResponseStatus } from '@/backend/response/ResponseStatus';
+import { IPaginationInfo } from '@/app/index/interface/IPaginationInfo';
+import { IPacketLog } from '@/app/index/interface/IPacketLog';
+import { Card, CardBody, CardFooter, CardHeader } from '@nextui-org/card';
+import { Button } from '@nextui-org/react';
+import { Divider } from '@nextui-org/divider';
 
 interface PaginationProps {
     currentPage: number;
@@ -17,7 +17,7 @@ interface PaginationProps {
     onPageChange: (newPage: number) => void;
 }
 
-const PaginationControls: React.FC<PaginationProps> = ({currentPage, totalPages, isLoading, onPageChange}) => (
+const PaginationControls: React.FC<PaginationProps> = ({ currentPage, totalPages, isLoading, onPageChange }) => (
     <div className='my-2 flex items-center justify-between'>
         <Button
             onClick={() => onPageChange(currentPage - 1)}
@@ -39,16 +39,17 @@ const PaginationControls: React.FC<PaginationProps> = ({currentPage, totalPages,
 
 const PacketLogViewer: React.FC = () => {
     const [logs, setLogs] = useState<IPacketLog[]>([]);
-    const [pagination, setPagination] = useState<IPaginationInfo>({currentPage: 1, totalPages: 1, totalCount: 0});
+    const [pagination, setPagination] = useState<IPaginationInfo>({ currentPage: 1, totalPages: 1, totalCount: 0 });
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
     const currentPageRef = useRef(1);
 
     const fetchLogs = useCallback(async (page: number) => {
         setIsLoading(true);
         try {
             const response = await axios.get<IDataResponse>(`/api/packet-logs?page=${page}&limit=50`);
-            const {data, error, status, message} = response.data;
+            const { data, error, status, message } = response.data;
 
             if (error || status !== ResponseStatus.SUCCESS) {
                 throw new Error(message || 'Failed to fetch packet logs');
@@ -58,6 +59,7 @@ const PacketLogViewer: React.FC = () => {
                 setLogs(data.logs);
                 setPagination(data.pagination);
                 setError(null);
+                setLastUpdated(new Date());
             }
         } catch (error) {
             console.error('Error fetching packet logs:', error);
@@ -100,7 +102,14 @@ const PacketLogViewer: React.FC = () => {
 
     return (
         <div className='container mx-auto p-4'>
-            <h1 className='mb-4 text-2xl font-bold'>Packet Log Viewer</h1>
+            <div className="mb-4">
+                <h1 className='text-2xl font-bold'>Packet Log Viewer</h1>
+                {lastUpdated && (
+                    <p className='text-sm text-default-600'>
+                        最終更新: {lastUpdated.toLocaleString()}
+                    </p>
+                )}
+            </div>
             <PaginationControls
                 currentPage={currentPageRef.current}
                 totalPages={pagination.totalPages}
