@@ -45,7 +45,9 @@ const PacketLogViewer: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
     const [filterEmptyPayloads, setFilterEmptyPayloads] = useState(false);
+    const [isRealTimeUpdateEnabled, setIsRealTimeUpdateEnabled] = useState(true);
     const currentPageRef = useRef(1);
+    const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
 
     const FETCH_INTERVAL = 3000;
 
@@ -83,12 +85,25 @@ const PacketLogViewer: React.FC = () => {
         return true;
     };
 
+    const toggleRealTimeUpdate = () => {
+        setIsRealTimeUpdateEnabled(prev => !prev);
+    };
+
     useEffect(() => {
         fetchLogs(currentPageRef.current).then();
-        const intervalId = setInterval(() => fetchLogs(currentPageRef.current), FETCH_INTERVAL);
 
-        return () => clearInterval(intervalId);
-    }, [fetchLogs]);
+        if (isRealTimeUpdateEnabled) {
+            intervalIdRef.current = setInterval(() => fetchLogs(currentPageRef.current), FETCH_INTERVAL);
+        } else if (intervalIdRef.current) {
+            clearInterval(intervalIdRef.current);
+        }
+
+        return () => {
+            if (intervalIdRef.current) {
+                clearInterval(intervalIdRef.current);
+            }
+        };
+    }, [fetchLogs, isRealTimeUpdateEnabled]);
 
     useEffect(() => {
         if (filterEmptyPayloads) {
@@ -183,12 +198,20 @@ const PacketLogViewer: React.FC = () => {
                 <h1 className='text-2xl font-bold'>Packet Log Viewer</h1>
                 {lastUpdated && <p className='text-sm text-default-600'>最終更新: {lastUpdated.toLocaleString()}</p>}
             </div>
-            <div className='mb-4 flex items-center'>
-                <Switch
-                    checked={filterEmptyPayloads}
-                    onChange={(e) => setFilterEmptyPayloads(e.target.checked)}
-                />
-                <span className='ml-2'>空のペイロードを非表示</span>
+            <div className='mb-4 flex items-center space-x-4'>
+                <div className='flex items-center'>
+                    <Switch
+                        checked={filterEmptyPayloads}
+                        onChange={(e) => setFilterEmptyPayloads(e.target.checked)}
+                    />
+                    <span className='ml-2'>空のペイロードを非表示</span>
+                </div>
+                <Button
+                    color={isRealTimeUpdateEnabled ? "primary" : "default"}
+                    onClick={toggleRealTimeUpdate}
+                >
+                    {isRealTimeUpdateEnabled ? "リアルタイム更新停止" : "リアルタイム更新開始"}
+                </Button>
             </div>
             <PaginationControls
                 currentPage={currentPageRef.current}
