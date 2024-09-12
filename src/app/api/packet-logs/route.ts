@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
     } catch (error) {
         console.error('Error fetching packet logs:', error);
 
-        const errorResponse = new ErrorResponse({}, 'Error fetching packet logs', ResponseStatus.INTERNAL_SERVER_ERROR);
+        const errorResponse = new ErrorResponse({}, 'データベースにアクセスできませんでした', ResponseStatus.INTERNAL_SERVER_ERROR);
 
         return NextResponse.json(errorResponse.toResponse(), {status: ResponseStatus.INTERNAL_SERVER_ERROR});
     }

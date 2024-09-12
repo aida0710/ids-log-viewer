@@ -54,7 +54,7 @@ const PacketLogViewer: React.FC = () => {
             const { data, error, status, message } = response.data;
 
             if (error || status !== ResponseStatus.SUCCESS) {
-                throw new Error(message || 'Failed to fetch packet logs');
+                setError(message || 'データベースからログを取得できませんでした');
             }
 
             if (page === currentPageRef.current) {
@@ -65,7 +65,7 @@ const PacketLogViewer: React.FC = () => {
             }
         } catch (error) {
             console.error('Error fetching packet logs:', error);
-            setError('Failed to fetch packet logs. Please try again later.');
+            setError("データベースからログを取得できませんでした");
         } finally {
             setIsLoading(false);
         }
