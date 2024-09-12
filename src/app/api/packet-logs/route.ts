@@ -14,10 +14,19 @@ export async function GET(request: NextRequest) {
         const query = `
             SELECT *
             FROM packet_log
-            ORDER BY arrival_time DESC 
-            LIMIT ? OFFSET ?
+            ORDER BY arrival_time DESC LIMIT ?
+            OFFSET ?
         `;
         const [rows] = await SqlQuery.select(query, [limit, offset]);
+
+        // Base64エンコードされたペイロードをデコード
+        const decodedRows = rows.map((row: any) => ({
+            ...row,
+            payload: {
+                type: 'Buffer',
+                data: Buffer.from(row.payload, 'base64'),
+            },
+        }));
 
         const countQuery = 'SELECT COUNT(*) as total FROM packet_log';
         const [countResult] = await SqlQuery.select(countQuery, []);
@@ -25,7 +34,7 @@ export async function GET(request: NextRequest) {
 
         const successResponse = new SuccessResponse(
             {
-                logs: rows,
+                logs: decodedRows,
                 pagination: {
                     currentPage: page,
                     totalPages: Math.ceil(totalCount / limit),
