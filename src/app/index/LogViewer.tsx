@@ -45,6 +45,8 @@ const PacketLogViewer: React.FC = () => {
     const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
     const currentPageRef = useRef(1);
 
+    const FETCH_INTERVAL = 3000;
+
     const fetchLogs = useCallback(async (page: number) => {
         setIsLoading(true);
         try {
@@ -71,7 +73,7 @@ const PacketLogViewer: React.FC = () => {
 
     useEffect(() => {
         fetchLogs(currentPageRef.current).then();
-        const intervalId = setInterval(() => fetchLogs(currentPageRef.current), 5000);
+        const intervalId = setInterval(() => fetchLogs(currentPageRef.current), FETCH_INTERVAL);
 
         return () => clearInterval(intervalId);
     }, [fetchLogs]);
