@@ -85,9 +85,9 @@ const PacketLogViewer: React.FC = () => {
         if (payload.type === 'Buffer') {
             const text = String.fromCharCode(...payload.data);
             return (
-                <div>
+                <div className="overflow-x-auto">
                     <h3 className='font-semibold'>Payload:</h3>
-                    <pre className='overflow-x-auto whitespace-break-spaces rounded text-sm'>{text}</pre>
+                    <pre className='whitespace-break-spaces rounded text-sm'>{text}</pre>
                 </div>
             );
         }
