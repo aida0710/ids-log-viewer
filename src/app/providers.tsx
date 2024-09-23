@@ -11,7 +11,7 @@ export function Providers({children}: Readonly<{children: React.ReactNode}>) {
 
     return (
         <ThemeProvider
-            defaultTheme='dark'
+            defaultTheme='default'
             attribute='class'>
             <NextUIProvider navigate={router.push}>{children}</NextUIProvider>
         </ThemeProvider>
