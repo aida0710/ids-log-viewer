@@ -9,6 +9,7 @@ import {IPacketLog} from '@/app/index/interface/IPacketLog';
 import {Card, CardBody, CardFooter, CardHeader} from '@nextui-org/card';
 import {Accordion, AccordionItem, Button, Switch} from '@nextui-org/react';
 import {Divider} from '@nextui-org/divider';
+import {Spinner} from '@nextui-org/spinner';
 
 interface PaginationProps {
     currentPage: number;
@@ -43,6 +44,7 @@ const PacketLogViewer: React.FC = () => {
     const [pagination, setPagination] = useState<IPaginationInfo>({currentPage: 1, totalPages: 1, totalCount: 0});
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [isInitialLoading, setIsInitialLoading] = useState(true);
     const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
     const [filterEmptyPayloads, setFilterEmptyPayloads] = useState(false);
     const [isRealTimeUpdateEnabled, setIsRealTimeUpdateEnabled] = useState(true);
@@ -72,22 +74,9 @@ const PacketLogViewer: React.FC = () => {
             setError('データベースからログを取得できませんでした');
         } finally {
             setIsLoading(false);
+            setIsInitialLoading(false);
         }
     }, []);
-
-    const isPayloadEmpty = (payload: IPacketLog['payload']): boolean => {
-        if (payload && payload.type === 'Buffer' && payload.data) {
-            // すべての空白文字（スペース、タブ、改行など）を削除
-            const text = Buffer.from(payload.data).toString().replace(/\s+/g, '');
-            // 空白文字を削除した後、文字列が空であるかチェック
-            return text === '';
-        }
-        return true;
-    };
-
-    const toggleRealTimeUpdate = () => {
-        setIsRealTimeUpdateEnabled(prev => !prev);
-    };
 
     useEffect(() => {
         fetchLogs(currentPageRef.current).then();
@@ -104,6 +93,20 @@ const PacketLogViewer: React.FC = () => {
             }
         };
     }, [fetchLogs, isRealTimeUpdateEnabled]);
+
+    const isPayloadEmpty = (payload: IPacketLog['payload']): boolean => {
+        if (payload && payload.type === 'Buffer' && payload.data) {
+            // すべての空白文字（スペース、タブ、改行など）を削除
+            const text = Buffer.from(payload.data).toString().replace(/\s+/g, '');
+            // 空白文字を削除した後、文字列が空であるかチェック
+            return text === '';
+        }
+        return true;
+    };
+
+    const toggleRealTimeUpdate = () => {
+        setIsRealTimeUpdateEnabled((prev) => !prev);
+    };
 
     useEffect(() => {
         if (filterEmptyPayloads) {
@@ -207,10 +210,9 @@ const PacketLogViewer: React.FC = () => {
                     <span className='ml-2'>空のペイロードを非表示</span>
                 </div>
                 <Button
-                    color={isRealTimeUpdateEnabled ? "primary" : "default"}
-                    onClick={toggleRealTimeUpdate}
-                >
-                    {isRealTimeUpdateEnabled ? "リアルタイム更新停止" : "リアルタイム更新開始"}
+                    color={isRealTimeUpdateEnabled ? 'primary' : 'default'}
+                    onClick={toggleRealTimeUpdate}>
+                    {isRealTimeUpdateEnabled ? 'リアルタイム更新停止' : 'リアルタイム更新開始'}
                 </Button>
             </div>
             <PaginationControls
@@ -219,40 +221,46 @@ const PacketLogViewer: React.FC = () => {
                 isLoading={isLoading}
                 onPageChange={handlePageChange}
             />
-            <div className='space-y-4'>
-                {filteredLogs.map((log) => (
-                    <Card key={log.id}>
-                        <CardHeader>
-                            <h2 className='mb-2 text-xl font-semibold'>Packet Log ID: {log.id}</h2>
-                        </CardHeader>
-                        <Divider />
-                        <CardBody>
-                            <div className='grid grid-cols-2'>
-                                <p>Arrival Time: {new Date(log.arrival_time).toLocaleString()}</p>
-                                <p>Protocol: {log.protocol}</p>
-                                <p>IP Version: {log.ip_version}</p>
-                                <p>IP Header Length: {log.ip_header_length}</p>
-                                <p>Total Length: {log.total_length}</p>
-                                <p>TTL: {log.ttl}</p>
-                                <p>Fragment Offset: {log.fragment_offset}</p>
-                                <p>Source: {`${log.src_ip} : ${log.src_port}`}</p>
-                                <p>Destination: {`${log.dst_ip} : ${log.dst_port}`}</p>
-                                <p>Application Protocol: {log.application_protocol}</p>
-                                <p>TCP State: {log.tcp_state}</p>
-                                <p>Stream ID: {log.stream_id}</p>
-                                <p>Tcp Seq Num: {log.tcp_seq_num}</p>
-                                <p>Tcp Ack Num: {log.tcp_ack_num}</p>
-                                <p>Tcp Window Size: {log.tcp_window_size}</p>
-                                <p>Tcp Flags: {log.tcp_flags}</p>
-                                <p>Tcp Data Offset: {log.tcp_data_offset}</p>
-                                <p>Is From Client: {log.is_from_client ? 'Yes' : 'No'}</p>
-                            </div>
-                        </CardBody>
-                        <Divider />
-                        <CardFooter>{renderPayload(log.payload, log.protocol)}</CardFooter>
-                    </Card>
-                ))}
-            </div>
+            {isInitialLoading ? (
+                <div className='flex h-64 items-center justify-center'>
+                    <Spinner size='lg' />
+                </div>
+            ) : (
+                <div className='space-y-4'>
+                    {filteredLogs.map((log) => (
+                        <Card key={log.id}>
+                            <CardHeader>
+                                <h2 className='mb-2 text-xl font-semibold'>Packet Log ID: {log.id}</h2>
+                            </CardHeader>
+                            <Divider />
+                            <CardBody>
+                                <div className='grid grid-cols-2'>
+                                    <p>Arrival Time: {new Date(log.arrival_time).toLocaleString()}</p>
+                                    <p>Protocol: {log.protocol}</p>
+                                    <p>IP Version: {log.ip_version}</p>
+                                    <p>IP Header Length: {log.ip_header_length}</p>
+                                    <p>Total Length: {log.total_length}</p>
+                                    <p>TTL: {log.ttl}</p>
+                                    <p>Fragment Offset: {log.fragment_offset}</p>
+                                    <p>Source: {`${log.src_ip} : ${log.src_port}`}</p>
+                                    <p>Destination: {`${log.dst_ip} : ${log.dst_port}`}</p>
+                                    <p>Application Protocol: {log.application_protocol}</p>
+                                    <p>TCP State: {log.tcp_state}</p>
+                                    <p>Stream ID: {log.stream_id}</p>
+                                    <p>Tcp Seq Num: {log.tcp_seq_num}</p>
+                                    <p>Tcp Ack Num: {log.tcp_ack_num}</p>
+                                    <p>Tcp Window Size: {log.tcp_window_size}</p>
+                                    <p>Tcp Flags: {log.tcp_flags}</p>
+                                    <p>Tcp Data Offset: {log.tcp_data_offset}</p>
+                                    <p>Is From Client: {log.is_from_client ? 'Yes' : 'No'}</p>
+                                </div>
+                            </CardBody>
+                            <Divider />
+                            <CardFooter>{renderPayload(log.payload, log.protocol)}</CardFooter>
+                        </Card>
+                    ))}
+                </div>
+            )}
             <PaginationControls
                 currentPage={currentPageRef.current}
                 totalPages={pagination.totalPages}
