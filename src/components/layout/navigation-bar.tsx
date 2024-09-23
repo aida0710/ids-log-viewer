@@ -6,6 +6,7 @@ import React from 'react';
 import {ThemeButton} from '@/components/layout/theme-button';
 import {ProjectIcon} from '@/components/icons/project-icon';
 import {BsGithub} from 'react-icons/bs';
+import {AppWindowIcon, ChartPieIcon} from 'lucide-react';
 
 export const NavigationBar = () => {
     return (
@@ -21,6 +22,22 @@ export const NavigationBar = () => {
                 </NavbarBrand>
             </NavbarContent>
             <NavbarContent justify='end'>
+                <Link href='/'>
+                    <Button
+                        color='success'
+                        startContent={<AppWindowIcon />}
+                        variant='flat'>
+                        Packet Logs
+                    </Button>
+                </Link>
+                <Link href='/statistics'>
+                    <Button
+                        color='warning'
+                        startContent={<ChartPieIcon />}
+                        variant='flat'>
+                        Statistics
+                    </Button>
+                </Link>
                 <Button
                     className='block p-2'
                     radius='full'
