@@ -19,14 +19,36 @@ export async function GET(request: NextRequest) {
         `;
         const [rows] = await SqlQuery.select(query, [limit, offset]);
 
-        // Base64エンコードされたペイロードをデコード
-        const decodedRows = rows.map((row: any) => ({
-            ...row,
-            payload: {
-                type: 'Buffer',
-                data: Buffer.from(row.payload, 'base64'),
-            },
-        }));
+        // Base64エンコードされたペイロードを二重デコード
+        const decodedRows = rows.map((row: any) => {
+            let decodedPayload: string;
+            try {
+                // 最初のBase64デコード
+                const buffer = Buffer.from(row.payload, 'base64');
+                const firstDecoded = buffer.toString('utf-8');
+
+                // 二回目のBase64デコード（必要な場合のみ）
+                if (isBase64(firstDecoded)) {
+                    const secondBuffer = Buffer.from(firstDecoded, 'base64');
+                    decodedPayload = secondBuffer.toString('utf-8');
+                } else {
+                    decodedPayload = firstDecoded;
+                }
+            } catch (error) {
+                console.error('Error decoding payload:', error);
+                decodedPayload = 'Error decoding payload';
+            }
+            return {
+                ...row,
+                payload: decodedPayload,
+            };
+        });
+
+        // デコードされたペイロードをログ出力（デバッグ用）
+
+        //decodedRows.forEach((row: any) => {
+        //    console.log('Decoded payload:', row.payload);
+        //});
 
         const countQuery = 'SELECT COUNT(*) as total FROM packet_log';
         const [countResult] = await SqlQuery.select(countQuery, []);
@@ -53,5 +75,14 @@ export async function GET(request: NextRequest) {
         const errorResponse = new ErrorResponse({}, 'データベースにアクセスできませんでした', ResponseStatus.INTERNAL_SERVER_ERROR);
 
         return NextResponse.json(errorResponse.toResponse(), {status: ResponseStatus.INTERNAL_SERVER_ERROR});
+    }
+}
+
+// 文字列がBase64エンコードされているかどうかを判断する関数
+function isBase64(str: string) {
+    try {
+        return btoa(atob(str)) === str;
+    } catch (err) {
+        return false;
     }
 }
