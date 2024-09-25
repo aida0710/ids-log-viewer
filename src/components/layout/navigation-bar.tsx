@@ -5,8 +5,8 @@ import {Button, Navbar, NavbarBrand, NavbarContent} from '@nextui-org/react';
 import React from 'react';
 import {ThemeButton} from '@/components/layout/theme-button';
 import {ProjectIcon} from '@/components/icons/project-icon';
-import {BsGithub} from 'react-icons/bs';
 import {AppWindowIcon, ChartPieIcon} from 'lucide-react';
+import ProjectCardModal from '@/components/layout/project-link-modal';
 
 export const NavigationBar = () => {
     return (
@@ -38,16 +38,7 @@ export const NavigationBar = () => {
                         Statistics
                     </Button>
                 </Link>
-                <Button
-                    className='block p-2'
-                    radius='full'
-                    isIconOnly
-                    variant='ghost'
-                    onClick={(): void => {
-                        window.open('https://github.com/aida0710/ids-log-viewer', '_blank');
-                    }}>
-                    <BsGithub className='h-full w-full' />
-                </Button>
+                <ProjectCardModal />
                 <ThemeButton />
             </NavbarContent>
         </Navbar>
