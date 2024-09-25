@@ -58,6 +58,7 @@ export default function Page() {
                 </div>
                 <Button
                     color={isRealTimeUpdateEnabled ? 'primary' : 'default'}
+                    variant='flat'
                     onClick={() => setIsRealTimeUpdateEnabled(!isRealTimeUpdateEnabled)}>
                     {isRealTimeUpdateEnabled ? 'リアルタイム更新停止' : 'リアルタイム更新開始'}
                 </Button>
