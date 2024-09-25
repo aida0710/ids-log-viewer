@@ -63,6 +63,7 @@ export default function Page() {
                 </Button>
             </div>
             <PaginationControls
+                log_length={logs.length}
                 currentPage={currentPageRef.current}
                 totalPages={pagination.totalPages}
                 isLoading={isLoading}
@@ -83,6 +84,7 @@ export default function Page() {
                 </div>
             )}
             <PaginationControls
+                log_length={logs.length}
                 currentPage={currentPageRef.current}
                 totalPages={pagination.totalPages}
                 isLoading={isLoading}

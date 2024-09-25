@@ -2,23 +2,26 @@ import {Button} from '@nextui-org/react';
 import React from 'react';
 import {IPaginationProps} from '@/app/index/interface/IPaginationProps';
 
-export const PaginationControls: React.FC<IPaginationProps> = ({ currentPage, totalPages, isLoading, onPageChange }) => (
+export const PaginationControls: React.FC<IPaginationProps> = ({log_length, currentPage, totalPages, isLoading, onPageChange}) => (
     <div className='my-2 flex items-center justify-between'>
         <Button
             onClick={() => onPageChange(currentPage - 1)}
-            disabled={currentPage === 1 || isLoading}
-            color='default'
-        >
+            isDisabled={currentPage === 1 || isLoading}
+            variant='flat'
+            color='primary'>
             前へ
         </Button>
-        <span>
-            Page {currentPage} of {totalPages}
-        </span>
+        <div className='flex flex-col items-center space-y-2'>
+            <span>
+                Page {currentPage} of {totalPages}
+            </span>
+            <span>Number of displayed logs {log_length}</span>
+        </div>
         <Button
             onClick={() => onPageChange(currentPage + 1)}
-            disabled={currentPage === totalPages || isLoading}
-            color='default'
-        >
+            isDisabled={currentPage === totalPages || isLoading}
+            variant='flat'
+            color='primary'>
             次へ
         </Button>
     </div>
