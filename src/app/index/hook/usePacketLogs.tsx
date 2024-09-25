@@ -4,7 +4,10 @@ import {IPaginationInfo} from '@/app/index/interface/IPaginationInfo';
 import axios from 'axios';
 import {IDataResponse} from '@/backend/response/IDataResponse';
 import {ResponseStatus} from '@/backend/response/ResponseStatus';
-import {isPayloadEmpty} from '@/app/index/utits/isPayloadEmpty';
+
+const isPayloadEmpty = (payload: IPacketLog['payload']): boolean => {
+    return !payload || payload.length <= 6;
+};
 
 export const usePacketLogs = (initialPage: number) => {
     const [logs, setLogs] = useState<IPacketLog[]>([]);
