@@ -2,13 +2,13 @@
 
 import React, {useEffect, useRef, useState} from 'react';
 import {usePacketLogs} from '@/app/index/hook/usePacketLogs';
-import {Button, Switch} from '@nextui-org/react';
+import {Button} from '@nextui-org/react';
 import {PaginationControls} from '@/app/index/components/PaginationControls';
 import {Spinner} from '@nextui-org/spinner';
 import {PacketLogCard} from '@/app/index/components/PacketLogCard';
 
 export default function Page() {
-    const {logs, pagination, error, isLoading, isInitialLoading, lastUpdated, filterEmptyPayloads, setFilterEmptyPayloads, fetchLogs, currentPageRef} =
+    const {logs, pagination, error, isLoading, isInitialLoading, lastUpdated, minPayloadLength, setMinPayloadLength, fetchLogs, currentPageRef} =
         usePacketLogs(1);
 
     const [isRealTimeUpdateEnabled, setIsRealTimeUpdateEnabled] = useState(true);
@@ -50,11 +50,15 @@ export default function Page() {
             </div>
             <div className='mb-4 flex items-center space-x-4'>
                 <div className='flex items-center'>
-                    <Switch
-                        checked={filterEmptyPayloads}
-                        onChange={(e) => setFilterEmptyPayloads(e.target.checked)}
+                    <span className='mr-2'>最小ペイロード長:</span>
+                    <input
+                        type='number'
+                        min={0}
+                        max={100}
+                        value={minPayloadLength}
+                        onChange={(e) => setMinPayloadLength(Number(e.target.value))}
+                        className='w-16 rounded px-2 py-1 border border-default-300 focus:border-primary focus:outline-none'
                     />
-                    <span className='ml-2'>空のペイロードを非表示</span>
                 </div>
                 <Button
                     color={isRealTimeUpdateEnabled ? 'primary' : 'default'}

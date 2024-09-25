@@ -5,10 +5,6 @@ import axios from 'axios';
 import {IDataResponse} from '@/backend/response/IDataResponse';
 import {ResponseStatus} from '@/backend/response/ResponseStatus';
 
-const isPayloadEmpty = (payload: IPacketLog['payload']): boolean => {
-    return !payload || payload.length <= 6;
-};
-
 export const usePacketLogs = (initialPage: number) => {
     const [logs, setLogs] = useState<IPacketLog[]>([]);
     const [filteredLogs, setFilteredLogs] = useState<IPacketLog[]>([]);
@@ -21,7 +17,7 @@ export const usePacketLogs = (initialPage: number) => {
     const [isLoading, setIsLoading] = useState(false);
     const [isInitialLoading, setIsInitialLoading] = useState(true);
     const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-    const [filterEmptyPayloads, setFilterEmptyPayloads] = useState(false);
+    const [minPayloadLength, setMinPayloadLength] = useState(0);
     const currentPageRef = useRef(initialPage);
 
     const fetchLogs = useCallback(async (page: number) => {
@@ -48,12 +44,8 @@ export const usePacketLogs = (initialPage: number) => {
     }, []);
 
     useEffect(() => {
-        if (filterEmptyPayloads) {
-            setFilteredLogs(logs.filter((log) => !isPayloadEmpty(log.payload)));
-        } else {
-            setFilteredLogs(logs);
-        }
-    }, [logs, filterEmptyPayloads]);
+        setFilteredLogs(logs.filter((log) => log.payload.length >= minPayloadLength));
+    }, [logs, minPayloadLength]);
 
     return {
         logs: filteredLogs,
@@ -62,8 +54,8 @@ export const usePacketLogs = (initialPage: number) => {
         isLoading,
         isInitialLoading,
         lastUpdated,
-        filterEmptyPayloads,
-        setFilterEmptyPayloads,
+        minPayloadLength,
+        setMinPayloadLength,
         fetchLogs,
         currentPageRef,
     };
