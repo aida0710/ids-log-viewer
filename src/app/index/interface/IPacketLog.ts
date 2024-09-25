@@ -21,9 +21,6 @@ export interface IPacketLog {
     is_from_client: boolean;
     tcp_state: string;
     application_protocol: string;
-    payload: {
-        type: string;
-        data: number[];
-    };
+    payload: string;
     created_at: string;
 }
